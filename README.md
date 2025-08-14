@@ -45,25 +45,19 @@ git clone git@github.com:pytorch-labs/KernelAgent.git
 cd KernelAgent
 ```
 
-2. **Install dependencies**:
+2. **Create a virtual environment and install**:
 
-If you are using MacBook, please build and install Triton from source since triton cpu package is not available for macos.
+```bash
+pip install -e ".[cuda]"     # CUDA support (Linux only)
+pip install -e ".[dev]"      # Development dependencies
+pip install -e ".[cuda,dev]" # Both CUDA and dev dependencies
+```
+
+**Note for macOS users**: Since triton-nightly is not available for macOS, you'll need to build Triton from source:
 
 ```bash
 # Install Triton from source
-git clone https://github.com/triton-lang/triton.git
-cd triton
-pip install -r python/requirements.txt
-pip install -e .
-```
-
-After Triton is installed, please go back to the KernelAgent directory and continue to install other dependencies.
-| Note: for Devserver, `triton-nightly` will be installed automatically when you run the following command.
-
-```bash
-cd KernelAgent
-# Install other dependencies
-pip install -r requirements.txt
+pip install git+https://github.com/triton-lang/triton.git
 ```
 
 3. **Set up environment**:
@@ -186,20 +180,31 @@ KernelAgent/
 │   ├── kernel_refinement.j2       # Error-based refinement
 │   ├── test_generation.j2         # Test code generation
 │   └── triton_guidelines.j2       # Triton best practices
+├── tests/                         # Test suite
+│   ├── __init__.py
+│   └── test_basic.py              # Basic functionality tests
+├── .github/workflows/             # CI/CD configuration
+│   └── ci.yml                     # GitHub Actions workflow
 ├── triton_ui.py                   # Gradio web interface
 ├── e2e_test.py                    # End-to-end testing
+├── pyproject.toml                 # Project configuration and dependencies
 └── README.md                      # This file
 ```
 
 ## 🧪 Testing
 
-Run the end-to-end test:
+Run the test suite:
 
 ```bash
+# Run all tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ -v --cov=triton_kernel_agent
+
+# Run end-to-end test
 python e2e_test.py
 ```
-
-This will generate a cumsum kernel and verify it works correctly.
 
 ## 📊 Performance
 
