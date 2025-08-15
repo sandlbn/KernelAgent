@@ -35,7 +35,9 @@ class PromptManager:
             templates_dir: Path to the templates directory. If None, uses default.
         """
         if not JINJA2_AVAILABLE:
-            raise ImportError("Jinja2 is not available. Please install it with: pip install jinja2")
+            raise ImportError(
+                "Jinja2 is not available. Please install it with: pip install jinja2"
+            )
 
         # Set up templates directory
         if templates_dir:
@@ -45,11 +47,15 @@ class PromptManager:
             self.templates_dir = Path(__file__).parent.parent / "templates"
 
         if not self.templates_dir.exists():
-            raise FileNotFoundError(f"Templates directory not found: {self.templates_dir}")
+            raise FileNotFoundError(
+                f"Templates directory not found: {self.templates_dir}"
+            )
 
         # Initialize Jinja2 environment
         self.env = Environment(
-            loader=FileSystemLoader(str(self.templates_dir)), trim_blocks=True, lstrip_blocks=True
+            loader=FileSystemLoader(str(self.templates_dir)),
+            trim_blocks=True,
+            lstrip_blocks=True,
         )
 
         # Load templates
@@ -90,11 +96,15 @@ class PromptManager:
         """
         template = self.templates["test_generation"]
         return template.render(
-            problem_description=problem_description, provided_test_code=provided_test_code
+            problem_description=problem_description,
+            provided_test_code=provided_test_code,
         )
 
     def render_kernel_generation_prompt(
-        self, problem_description: str, test_code: str, triton_guidelines: Optional[str] = None
+        self,
+        problem_description: str,
+        test_code: str,
+        triton_guidelines: Optional[str] = None,
     ) -> str:
         """
         Render the kernel generation prompt.

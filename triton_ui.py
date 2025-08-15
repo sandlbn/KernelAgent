@@ -62,9 +62,7 @@ class TritonKernelUI:
         env_api_key = os.getenv("OPENAI_API_KEY")
 
         if not api_key and not env_api_key:
-            status = (
-                "❌ Please provide an OpenAI API key or set OPENAI_API_KEY environment variable."
-            )
+            status = "❌ Please provide an OpenAI API key or set OPENAI_API_KEY environment variable."
             return status, "", "", "", "", ""
 
         try:
@@ -122,14 +120,18 @@ class TritonKernelUI:
                 )
 
             else:
-                status = f"❌ **FAILED** after {generation_time:.2f}s: {result['message']}"
+                status = (
+                    f"❌ **FAILED** after {generation_time:.2f}s: {result['message']}"
+                )
                 logs = self._format_error_logs(result, generation_time)
                 session_info = self._format_session_info(result)
 
                 return status, "", "", logs, session_info, ""
 
         except Exception as e:
-            error_msg = f"❌ **ERROR**: {str(e)}\n\n**Traceback:**\n{traceback.format_exc()}"
+            error_msg = (
+                f"❌ **ERROR**: {str(e)}\n\n**Traceback:**\n{traceback.format_exc()}"
+            )
             return error_msg, "", "", "", "", ""
         finally:
             # Clean up: restore original API key environment variable
@@ -328,13 +330,17 @@ def main():
                 )
 
                 # Generate button
-                generate_btn = gr.Button("🚀 Generate Kernel", variant="primary", size="lg")
+                generate_btn = gr.Button(
+                    "🚀 Generate Kernel", variant="primary", size="lg"
+                )
 
             with gr.Column(scale=3):
                 gr.Markdown("## 📊 Results")
 
                 # Status display
-                status_output = gr.Markdown(label="Status", value="*Ready to generate kernels...*")
+                status_output = gr.Markdown(
+                    label="Status", value="*Ready to generate kernels...*"
+                )
 
                 # Generated kernel code
                 with gr.Tab("🔧 Generated Kernel"):
@@ -356,7 +362,9 @@ def main():
 
                 # Logs and metrics
                 with gr.Tab("📈 Generation Logs"):
-                    logs_output = gr.Markdown(label="Logs", value="*No generation logs yet...*")
+                    logs_output = gr.Markdown(
+                        label="Logs", value="*No generation logs yet...*"
+                    )
 
                 # Session information
                 with gr.Tab("📁 Session Info"):

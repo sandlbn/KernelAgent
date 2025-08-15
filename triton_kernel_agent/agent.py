@@ -33,12 +33,16 @@ def _get_meta_proxy_config() -> Optional[Dict[str, str]]:
     """
     try:
         # Check if with-proxy command exists (Meta environment)
-        result = subprocess.run(["which", "with-proxy"], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(
+            ["which", "with-proxy"], capture_output=True, text=True, timeout=5
+        )
         if result.returncode != 0:
             return None
 
         # Get proxy environment variables from with-proxy
-        result = subprocess.run(["with-proxy", "env"], capture_output=True, text=True, timeout=10)
+        result = subprocess.run(
+            ["with-proxy", "env"], capture_output=True, text=True, timeout=10
+        )
         if result.returncode != 0:
             return None
 
@@ -102,11 +106,21 @@ class TritonKernelAgent:
 
                     # Store original proxy settings
                     self._original_proxy_env = {}
-                    for key in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"]:
+                    for key in [
+                        "HTTP_PROXY",
+                        "HTTPS_PROXY",
+                        "http_proxy",
+                        "https_proxy",
+                    ]:
                         self._original_proxy_env[key] = os.environ.get(key)
 
                     # Set proxy environment variables
-                    for key in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"]:
+                    for key in [
+                        "HTTP_PROXY",
+                        "HTTPS_PROXY",
+                        "http_proxy",
+                        "https_proxy",
+                    ]:
                         proxy_url = proxy_config.get("https_proxy") or proxy_config.get(
                             "http_proxy"
                         )
@@ -143,7 +157,9 @@ class TritonKernelAgent:
 
     def _setup_logging(self):
         """Setup agent logging."""
-        log_file = self.log_dir / f"agent_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        log_file = (
+            self.log_dir / f"agent_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        )
         log_level = os.getenv("LOG_LEVEL", "INFO")
         logging.basicConfig(
             level=getattr(logging, log_level),
@@ -192,7 +208,9 @@ class TritonKernelAgent:
         # Simple heuristic: if response contains import statements or function definitions
         code_indicators = ["import ", "from ", "def ", "class ", "@", '"""', "'''"]
         if any(
-            line.strip().startswith(indicator) for line in lines for indicator in code_indicators
+            line.strip().startswith(indicator)
+            for line in lines
+            for indicator in code_indicators
         ):
             # Likely the entire response is code
             return response_text.strip()
@@ -224,7 +242,8 @@ class TritonKernelAgent:
 
                 # Create prompt for test generation using template
                 prompt = self.prompt_manager.render_test_generation_prompt(
-                    problem_description=problem_description, provided_test_code=provided_test_code
+                    problem_description=problem_description,
+                    provided_test_code=provided_test_code,
                 )
 
                 # Call OpenAI API with n=1 for test generation
@@ -249,7 +268,9 @@ class TritonKernelAgent:
                     self.logger.info("Successfully generated test code using OpenAI")
                     return test_code
                 else:
-                    self.logger.error("Failed to extract valid code from OpenAI response")
+                    self.logger.error(
+                        "Failed to extract valid code from OpenAI response"
+                    )
                     raise ValueError("No valid code found in OpenAI response")
 
             except Exception as e:
@@ -346,7 +367,9 @@ if __name__ == "__main__":
         # Use OpenAI API if available
         if self.openai_client:
             try:
-                self.logger.info(f"Generating {num_seeds} kernel seeds using {self.model_name}")
+                self.logger.info(
+                    f"Generating {num_seeds} kernel seeds using {self.model_name}"
+                )
 
                 # Create prompt with Triton guidelines using template
                 prompt = self.prompt_manager.render_kernel_generation_prompt(
@@ -376,14 +399,22 @@ if __name__ == "__main__":
                     if kernel_code:
                         kernels.append(kernel_code)
                     else:
-                        self.logger.warning(f"Failed to extract code from kernel seed {i}")
+                        self.logger.warning(
+                            f"Failed to extract code from kernel seed {i}"
+                        )
 
                 if kernels:
-                    self.logger.info(f"Successfully generated {len(kernels)} kernel seeds")
+                    self.logger.info(
+                        f"Successfully generated {len(kernels)} kernel seeds"
+                    )
                     return kernels
                 else:
-                    self.logger.error("Failed to extract any valid kernels from OpenAI responses")
-                    raise ValueError("No valid kernel code found in any OpenAI response")
+                    self.logger.error(
+                        "Failed to extract any valid kernels from OpenAI responses"
+                    )
+                    raise ValueError(
+                        "No valid kernel code found in any OpenAI response"
+                    )
 
             except Exception as e:
                 self.logger.error(f"Error generating kernels with OpenAI API: {e}")
@@ -443,7 +474,9 @@ def kernel_function(*args, **kwargs):
 
         # Always generate test code using LLM (even if test is provided as reference)
         generated_test_code = self._generate_test(problem_description, test_code)
-        self.logger.info("Generated test code using LLM" + (" with reference" if test_code else ""))
+        self.logger.info(
+            "Generated test code using LLM" + (" with reference" if test_code else "")
+        )
 
         # Use the generated test code in standardized format
         test_code = generated_test_code
@@ -453,7 +486,8 @@ def kernel_function(*args, **kwargs):
 
         # Add microseconds to ensure unique directory names
         timestamp = (
-            datetime.now().strftime("%Y%m%d_%H%M%S") + f"_{int(time.time() * 1000000) % 1000000}"
+            datetime.now().strftime("%Y%m%d_%H%M%S")
+            + f"_{int(time.time() * 1000000) % 1000000}"
         )
         session_dir = self.log_dir / f"session_{timestamp}"
         session_dir.mkdir(exist_ok=True)

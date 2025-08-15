@@ -61,7 +61,9 @@ def get_init_inputs():
     start_time = time.time()
 
     # Call agent to generate both test and kernel
-    result = agent.generate_kernel(problem_description, test_code=None)  # Let agent generate test
+    result = agent.generate_kernel(
+        problem_description, test_code=None
+    )  # Let agent generate test
 
     generation_time = time.time() - start_time
     print(f"\nGeneration completed in {generation_time:.2f} seconds")
@@ -69,7 +71,9 @@ def get_init_inputs():
     # Print results
     if result["success"]:
         print("\n✓ Successfully generated BF16 matmul + sigmoid kernel!")
-        print(f"  Worker {result['worker_id']} found solution in {result['rounds']} rounds")
+        print(
+            f"  Worker {result['worker_id']} found solution in {result['rounds']} rounds"
+        )
         print(f"  Session directory: {result['session_dir']}")
 
         print("\n" + "=" * 80)

@@ -66,7 +66,9 @@ class WorkerManager:
 
     def _setup_logging(self):
         """Setup logging configuration."""
-        log_file = self.log_dir / f"manager_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        log_file = (
+            self.log_dir / f"manager_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        )
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",

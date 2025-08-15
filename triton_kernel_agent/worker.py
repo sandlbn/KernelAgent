@@ -34,12 +34,16 @@ def _get_meta_proxy_config() -> Optional[Dict[str, str]]:
     """
     try:
         # Check if with-proxy command exists (Meta environment)
-        result = subprocess.run(["which", "with-proxy"], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(
+            ["which", "with-proxy"], capture_output=True, text=True, timeout=5
+        )
         if result.returncode != 0:
             return None
 
         # Get proxy environment variables from with-proxy
-        result = subprocess.run(["with-proxy", "env"], capture_output=True, text=True, timeout=10)
+        result = subprocess.run(
+            ["with-proxy", "env"], capture_output=True, text=True, timeout=10
+        )
         if result.returncode != 0:
             return None
 
@@ -101,7 +105,11 @@ class VerificationWorker:
 
         # Initialize OpenAI client if available
         self.openai_client = None
-        if OPENAI_AVAILABLE and openai_api_key and openai_api_key != "your-api-key-here":
+        if (
+            OPENAI_AVAILABLE
+            and openai_api_key
+            and openai_api_key != "your-api-key-here"
+        ):
             # Check for Meta proxy configuration
             proxy_config = _get_meta_proxy_config()
 
@@ -118,7 +126,9 @@ class VerificationWorker:
 
                 # Set proxy environment variables
                 for key in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"]:
-                    proxy_url = proxy_config.get("https_proxy") or proxy_config.get("http_proxy")
+                    proxy_url = proxy_config.get("https_proxy") or proxy_config.get(
+                        "http_proxy"
+                    )
                     if proxy_url:
                         os.environ[key] = proxy_url
 
@@ -185,7 +195,9 @@ class VerificationWorker:
         # Simple heuristic: if response contains import statements or function definitions
         code_indicators = ["import ", "from ", "def ", "class ", "@", '"""', "'''"]
         if any(
-            line.strip().startswith(indicator) for line in lines for indicator in code_indicators
+            line.strip().startswith(indicator)
+            for line in lines
+            for indicator in code_indicators
         ):
             # Likely the entire response is code
             return response_text.strip()
@@ -244,7 +256,11 @@ class VerificationWorker:
             return False, "", str(e)
 
     def _refine_kernel(
-        self, kernel_code: str, error_info: Dict[str, str], problem_description: str, test_code: str
+        self,
+        kernel_code: str,
+        error_info: Dict[str, str],
+        problem_description: str,
+        test_code: str,
     ) -> str:
         """
         Refine kernel based on error information using OpenAI API.
@@ -261,9 +277,7 @@ class VerificationWorker:
                     history_context = "\n\nPREVIOUS ATTEMPTS:\n"
                     for i, round_data in enumerate(self.history):
                         history_context += f"\nAttempt {i + 1}:\n"
-                        history_context += (
-                            f"Kernel code:\n```python\n{round_data['kernel_code'][:500]}...\n```\n"
-                        )
+                        history_context += f"Kernel code:\n```python\n{round_data['kernel_code'][:500]}...\n```\n"
                         if round_data.get("stderr"):
                             history_context += f"Error: {round_data['stderr'][:200]}\n"
                         if round_data.get("stdout"):
@@ -300,7 +314,9 @@ class VerificationWorker:
                     self.logger.info("Successfully refined kernel using OpenAI")
                     return refined_kernel
                 else:
-                    self.logger.error("Failed to extract valid code from OpenAI response")
+                    self.logger.error(
+                        "Failed to extract valid code from OpenAI response"
+                    )
                     # Return original kernel if extraction fails
                     return kernel_code
 
@@ -318,7 +334,9 @@ class VerificationWorker:
 
         return kernel_code
 
-    def _log_round(self, round_num: int, success: bool, kernel_code: str, stdout: str, stderr: str):
+    def _log_round(
+        self, round_num: int, success: bool, kernel_code: str, stdout: str, stderr: str
+    ):
         """Log the results of a verification round."""
         round_data = {
             "round": round_num,
@@ -338,7 +356,11 @@ class VerificationWorker:
         self.history.append(round_data)
 
     def run(
-        self, kernel_code: str, test_code: str, problem_description: str, success_event: mp.Event
+        self,
+        kernel_code: str,
+        test_code: str,
+        problem_description: str,
+        success_event: mp.Event,
     ) -> Dict[str, Any]:
         """
         Run verification and refinement loop.
@@ -384,7 +406,9 @@ class VerificationWorker:
             self._log_round(round_num + 1, success, current_kernel, stdout, stderr)
 
             if success:
-                self.logger.info(f"Success! Kernel passed test in round {round_num + 1}")
+                self.logger.info(
+                    f"Success! Kernel passed test in round {round_num + 1}"
+                )
                 return {
                     "worker_id": self.worker_id,
                     "success": True,
@@ -394,7 +418,11 @@ class VerificationWorker:
                 }
 
             # Refine kernel for next round
-            error_info = {"stdout": stdout, "stderr": stderr, "history": list(self.history)}
+            error_info = {
+                "stdout": stdout,
+                "stderr": stderr,
+                "history": list(self.history),
+            }
 
             current_kernel = self._refine_kernel(
                 current_kernel, error_info, problem_description, test_code
