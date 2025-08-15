@@ -48,15 +48,17 @@ cd KernelAgent
 2. **Create a virtual environment and install**:
 
 ```bash
-pip install -e ".[cuda]"     # CUDA support (Linux only)
-pip install -e ".[dev]"      # Development dependencies
-pip install -e ".[cuda,dev]" # Both CUDA and dev dependencies
+pip install -e .         # Basic installation
+pip install -e ".[dev]"  # With development dependencies
 ```
 
-**Note for macOS users**: Since triton-nightly is not available for macOS, you'll need to build Triton from source:
+**Note**: Triton is not automatically installed. Install separately based on your system:
 
 ```bash
-# Install Triton from source
+# For CUDA systems
+pip install triton
+
+# For development/latest features
 pip install git+https://github.com/triton-lang/triton.git
 ```
 
@@ -197,13 +199,13 @@ Run the test suite:
 
 ```bash
 # Run all tests
-pytest tests/ -v
+uv run pytest tests/ -v
 
 # Run with coverage
-pytest tests/ -v --cov=triton_kernel_agent
+uv run pytest tests/ -v --cov=triton_kernel_agent
 
 # Run end-to-end test
-python e2e_test.py
+uv run python e2e_test.py
 ```
 
 ## 📊 Performance
