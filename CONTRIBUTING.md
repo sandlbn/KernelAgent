@@ -8,7 +8,7 @@ By participating, you agree to abide by our Code of Conduct. See `CODE_OF_CONDUC
 
 ## Ways to Contribute
 - Report bugs and performance issues
-- Propose features or improvements
+- Propose features and improvements
 - Improve documentation and examples
 - Add tests and fix bugs
 - Optimize kernels or refine prompts/templates
