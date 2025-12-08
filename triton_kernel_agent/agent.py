@@ -86,7 +86,7 @@ class TritonKernelAgent:
         self._setup_logging()
 
         # Initialize prompt manager
-        self.prompt_manager = PromptManager(platform=target_platform)
+        self.prompt_manager = PromptManager(target_platform=target_platform)
 
         # Initialize worker manager
         self.manager = WorkerManager(

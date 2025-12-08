@@ -167,7 +167,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument("--verify", action="store_true")
     p.add_argument("--compose-max-iters", type=int, default=5)
     p.add_argument(
-        "--platform", default="cuda", choices=["cuda", "xpu"], help="Target platform"
+        "--target-platform", default="cuda", choices=["cuda", "xpu"], help="Target platform"
     )
     args = p.parse_args(argv)
 
@@ -190,7 +190,7 @@ def main(argv: Optional[list[str]] = None) -> int:
             out_root=Path(args.out_root) if args.out_root else None,
             verify=args.verify,
             compose_max_iters=args.compose_max_iters,
-            target_platform=args.platform,
+            target_platform=args.target_platform,
         )
         print(json.dumps(res, indent=2))
         return 0

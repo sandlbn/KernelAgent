@@ -126,7 +126,7 @@ class VerificationWorker:
             self.logger.warning(f"Provider not available: {e}")
 
         # Initialize prompt manager
-        self.prompt_manager = PromptManager(platform=target_platform)
+        self.prompt_manager = PromptManager(target_platform=target_platform)
 
     def _setup_logging(self):
         """Setup worker-specific logging."""

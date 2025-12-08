@@ -701,7 +701,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument("--dispatch-jobs", type=int, default=2)
     p.add_argument("--no-fallback", action="store_true")
     p.add_argument(
-        "--platform",
+        "--target-platform",
         default="cuda",
         choices=["cuda", "xpu"],
         help="Target platform (default: cuda)",
@@ -736,7 +736,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         verify=args.verify,
         dispatch_jobs=args.dispatch_jobs,
         allow_fallback=(not args.no_fallback),
-        target_platform=args.platform,
+        target_platform=args.target_platform,
     )
 
     try:

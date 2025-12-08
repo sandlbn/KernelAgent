@@ -442,7 +442,7 @@ def main(argv: List[str] | None = None) -> int:
         help="Max concurrent subgraphs to dispatch (default: 2); use 'auto' to match subgraph count",
     )
     p.add_argument(
-        "--platform",
+        "--target-platform",
         default="cuda",
         choices=["cuda", "xpu"],
         help="Target platform (default: cuda)",
@@ -474,7 +474,7 @@ def main(argv: List[str] | None = None) -> int:
         out_dir,
         agent_model=args.agent_model,
         jobs=jobs_val,
-        target_platform=args.platform,
+        target_platform=args.target_platform,
     )
     print(str(summary_path))
     return 0

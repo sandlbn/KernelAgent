@@ -361,7 +361,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument("--llm-timeout-s", type=int, default=2400)
     p.add_argument("--run-timeout-s", type=int, default=2400)
     p.add_argument(
-        "--platform", default="cuda", choices=["cuda", "xpu"], help="Target platform"
+        "--target-platform", default="cuda", choices=["cuda", "xpu"], help="Target platform"
     )
     args = p.parse_args(argv)
 
@@ -378,7 +378,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         max_iters=args.max_iters,
         llm_timeout_s=args.llm_timeout_s,
         run_timeout_s=args.run_timeout_s,
-        target_platform=args.platform,
+        target_platform=args.target_platform,
     )
     print(str(json_path))
     return 0

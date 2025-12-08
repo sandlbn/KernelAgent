@@ -425,7 +425,7 @@ def compose(
         extracted = extract_single_python_file(raw_text)
         code = extracted.code
         # Auto-patch trivial Triton pitfalls before running
-        code, changed = _auto_patch_common_triton_issues(code)
+        code, changed = _auto_patch_common_triton_issues(code, target_platform)
         (attempts_dir / f"attempt_{i}.py").write_text(code, encoding="utf-8")
         last_code = code
 
@@ -503,7 +503,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         help="Execute generated file and check PASS sentinel",
     )
     p.add_argument(
-        "--platform",
+        "--target-platform",
         default="cuda",
         choices=["cuda", "xpu"],
         help="Target platform (default: cuda)",
@@ -535,7 +535,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             model_name=args.model,
             verify=args.verify,
             max_iters=args.max_iters,
-            target_platform=args.platform,
+            target_platform=args.target_platform,
         )
         print(json.dumps(res, indent=2))
         return 0

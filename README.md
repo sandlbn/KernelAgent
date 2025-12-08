@@ -109,7 +109,7 @@ More knobs live in `triton_kernel_agent/agent.py` and `Fuser/config.py`.
   # For Intel XPU
   python -m Fuser.pipeline \
     --problem /abs/path/to/problem.py \
-    --platform xpu \
+    --target-platform xpu \
     --extract-model gpt-5 \
     --dispatch-model o4-mini \
     --dispatch-jobs auto \
@@ -162,8 +162,8 @@ KernelAgent supports multiple GPU platforms for Triton kernel execution:
 
 | Platform | Device String | Flag | Status |
 |----------|---------------|------|--------|
-| NVIDIA CUDA | `cuda` | `--platform cuda` (default) | Fully supported |
-| Intel XPU | `xpu` | `--platform xpu` | Supported |
+| NVIDIA CUDA | `cuda` | `--target-platform cuda` (default) | Fully supported |
+| Intel XPU | `xpu` | `--target-platform xpu` | Supported |
 
 ### Intel XPU Notes
 

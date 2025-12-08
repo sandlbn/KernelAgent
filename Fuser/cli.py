@@ -76,7 +76,7 @@ def cmd_run(argv: list[str]) -> int:
     p.add_argument("--deny-network", action="store_true", default=False)
     p.add_argument("--enable-reasoning-extras", action="store_true", default=True)
     p.add_argument(
-        "--platform", default="cuda", choices=["cuda", "xpu"], help="Target platform"
+        "--target-platform", default="cuda", choices=["cuda", "xpu"], help="Target platform"
     )
     args = p.parse_args(argv)
 
@@ -98,7 +98,7 @@ def cmd_run(argv: list[str]) -> int:
         isolated=args.isolated,
         deny_network=args.deny_network,
         enable_reasoning_extras=args.enable_reasoning_extras,
-        target_platform=args.platform,
+        target_platform=args.target_platform,
     )
 
     run_id = new_run_id()
