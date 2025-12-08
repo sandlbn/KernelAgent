@@ -159,17 +159,6 @@ def _build_composition_prompt(
             - Preferred block sizes: 64, 128, 256, or 512
             """
         ).strip()
-    else:
-        platform_guidance = textwrap.dedent(
-            """
-            **PLATFORM REQUIREMENTS FOR CUDA:**
-            - Use device='cuda' for ALL tensor allocations
-            - Check availability with: torch.cuda.is_available()
-            - Use torch.cuda.synchronize() if synchronization is needed
-            - CUDA warp size is 32
-            - Preferred block sizes: 64, 128, 256, 512, or 1024
-            """
-        ).strip()
 
     guidance = textwrap.dedent(
         f"""
