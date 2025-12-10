@@ -26,6 +26,7 @@ from dotenv import load_dotenv
 from .manager import WorkerManager
 from .prompt_manager import PromptManager
 from utils.providers import get_model_provider
+from triton_kernel_agent.platform_config import PlatformConfig, get_platform
 
 
 class TritonKernelAgent:
@@ -38,7 +39,7 @@ class TritonKernelAgent:
         log_dir: Optional[str] = None,
         model_name: Optional[str] = None,
         high_reasoning_effort: bool = True,
-        target_platform: str = "cuda",
+        target_platform: Optional[PlatformConfig] = None,
     ):
         """
         Initialize the Triton Kernel Agent.
@@ -49,7 +50,7 @@ class TritonKernelAgent:
             log_dir: Directory for logs (creates temp if None)
             model_name: OpenAI model to use (loaded from .env if None)
             high_reasoning_effort: Whether to use high reasoning effort for OpenAI models
-            target_platform: Target platform ('cuda' or 'xpu')
+            target_platform: Target platform PlatformConfig
         """
         # Load environment variables
         load_dotenv()
@@ -61,6 +62,8 @@ class TritonKernelAgent:
             "OPENAI_MODEL", "claude-sonnet-4-20250514"
         )
         self.high_reasoning_effort = high_reasoning_effort
+        if target_platform is None:
+            target_platform = get_platform("cuda")
         self.target_platform = target_platform
 
         # Initialize provider

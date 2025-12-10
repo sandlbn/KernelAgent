@@ -25,6 +25,7 @@ from .config import OrchestratorConfig, new_run_id
 from .paths import ensure_abs_regular_file, make_run_dirs, PathSafetyError
 from .logging_utils import setup_file_logger
 from .orchestrator import Orchestrator
+from triton_kernel_agent.platform_config import get_platform_choices
 
 FUSE_BASE_DIR = Path.cwd() / ".fuse"
 
@@ -76,7 +77,10 @@ def cmd_run(argv: list[str]) -> int:
     p.add_argument("--deny-network", action="store_true", default=False)
     p.add_argument("--enable-reasoning-extras", action="store_true", default=True)
     p.add_argument(
-        "--target-platform", default="cuda", choices=["cuda", "xpu"], help="Target platform"
+        "--target-platform",
+        default="cuda",
+        choices=get_platform_choices(),
+        help="Target platform",
     )
     args = p.parse_args(argv)
 

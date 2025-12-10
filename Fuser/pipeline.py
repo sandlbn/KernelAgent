@@ -41,6 +41,7 @@ from typing import Optional
 from .subgraph_extractor import extract_subgraphs_to_json
 from .dispatch_kernel_agent import run as dispatch_run
 from .compose_end_to_end import compose
+from triton_kernel_agent.platform_config import get_platform_choices
 
 
 def run_pipeline(
@@ -167,7 +168,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument("--verify", action="store_true")
     p.add_argument("--compose-max-iters", type=int, default=5)
     p.add_argument(
-        "--target-platform", default="cuda", choices=["cuda", "xpu"], help="Target platform"
+        "--target-platform",
+        default="cuda",
+        choices=get_platform_choices(),
+        help="Target platform",
     )
     args = p.parse_args(argv)
 

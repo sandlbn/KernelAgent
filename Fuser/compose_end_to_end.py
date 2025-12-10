@@ -49,6 +49,12 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from dotenv import load_dotenv
 
+from triton_kernel_agent.platform_config import (
+    get_platform,
+    get_platform_choices,
+    PlatformConfig,
+)
+
 # Reuse KernelAgent provider stack for LLM calls
 try:
     from utils.providers.models import get_model_provider
@@ -128,7 +134,7 @@ def _build_composition_prompt(
     problem_code: str,
     subgraphs: List[Dict[str, Any]],
     kernel_items: List[KernelItem],
-    target_platform: str = "cuda",
+    target_platform: PlatformConfig,
 ) -> str:
     """Create a single user message to instruct composition by the LLM."""
     # Provide a succinct summary of subgraphs up front
@@ -143,22 +149,7 @@ def _build_composition_prompt(
         )
     kernels_section = "\n".join(kernels_section_parts)
     # Platform-specific guidance
-    platform_guidance = ""
-
-    if target_platform == "xpu":
-        platform_guidance = textwrap.dedent(
-            """
-            **CRITICAL PLATFORM REQUIREMENTS FOR INTEL XPU:**
-            - Use device='xpu' for ALL tensor allocations (never 'cuda')
-            - Check availability with: hasattr(torch, 'xpu') and torch.xpu.is_available()
-            - Do NOT monkey-patch torch.cuda or torch.device
-            - Do NOT set TRITON_BACKENDS environment variable
-            - Do NOT import or disable XPUDriver
-            - Use torch.xpu.synchronize() if synchronization is needed
-            - Intel XPU subgroup size is typically 16 (not 32 like CUDA warps)
-            - Preferred block sizes: 64, 128, 256, or 512
-            """
-        ).strip()
+    platform_guidance = target_platform.guidance_block
 
     guidance = textwrap.dedent(
         f"""
@@ -167,8 +158,8 @@ def _build_composition_prompt(
         - A decomposition of the model into fusable subgraphs with exact shapes.
         - Working Triton kernels generated for some subgraphs.
 
-        TARGET PLATFORM: {target_platform}
-        DEVICE STRING: {target_platform}
+        TARGET PLATFORM: {target_platform.name}
+        DEVICE STRING: {target_platform.device_string}
         {platform_guidance}
 
         Task:
@@ -179,7 +170,7 @@ def _build_composition_prompt(
 
         Hard requirements:
         - Return ONE complete Python file only, fenced as a single ```python block.
-        - Use device='{target_platform}' for ALL tensor allocations in the code.
+        - Use device='{target_platform.device_string}' for ALL tensor allocations in the code.
         - Provide at least one @triton.jit kernel and a top-level Python wrapper
           named kernel_function(...). This wrapper must accept the same primary
           input tensor(s) as the model and any required weights/biases with shapes
@@ -242,7 +233,7 @@ def _build_refinement_prompt(
     kernel_items: List[KernelItem],
     previous_code: str,
     error_info: Dict[str, str],
-    target_platform: str = "cuda",
+    target_platform: PlatformConfig,
 ) -> str:
     """Prompt the LLM to refine the previously produced code based on errors."""
     err_tail = error_info.get("stderr_tail", "")
@@ -254,8 +245,8 @@ def _build_refinement_prompt(
         to run/compile. Analyze the ERROR_CONTEXT below and re-emit the entire
         corrected single-file implementation as one ```python block.
 
-        TARGET PLATFORM: {target_platform}
-        DEVICE STRING: {target_platform}
+        TARGET PLATFORM: {target_platform.name}
+        DEVICE STRING: {target_platform.device_string}
 
         Requirements remain the same. Additionally:
         - Fix any Triton compilation/runtime errors. For scalar constants in
@@ -291,7 +282,7 @@ def _build_refinement_prompt(
 
 
 def _auto_patch_common_triton_issues(
-    code: str, target_platform: str = "cuda"
+    code: str, target_platform: PlatformConfig
 ) -> Tuple[str, bool]:
     """Apply tiny safe textual patches for known Triton pitfalls.
 
@@ -312,36 +303,26 @@ def _auto_patch_common_triton_issues(
             patched = patched.replace(old, new)
             changed = True
     # Remove cuda paterns
-    if target_platform == "xpu":
-        cuda_hacks = [
-            "torch.cuda.is_available = lambda: True",
-            "_orig_torch_device = torch.device",
-            "_real_torch_device = torch.device",
-            "def _fake_torch_device",
-            "torch.device = _fake_torch_device",
-            'os.environ["TRITON_BACKENDS"] = "cuda"',
-            "from triton.backends.intel.driver import XPUDriver",
-            "XPUDriver.is_available = classmethod(lambda cls: False)",
-        ]
-        for hack in cuda_hacks:
-            if hack in patched:
-                # Remove lines containing these patterns
-                lines = patched.split("\n")
-                filtered_lines = []
-                skip_until_blank = False
-                for line in lines:
-                    if any(h in line for h in cuda_hacks):
-                        changed = True
-                        if "def _fake_torch_device" in line:
-                            skip_until_blank = True
-                        continue
-                    if skip_until_blank:
-                        if line.strip() == "":
-                            skip_until_blank = False
-                        continue
-                    filtered_lines.append(line)
-                    patched = "\n".join(filtered_lines)
-
+    cuda_hacks = target_platform.cuda_hacks_to_strip
+    if cuda_hacks:
+        lines = patched.split("\n")
+        filtered_lines = []
+        skip_until_blank = False
+        for line in lines:
+            # Check if we're in a block to skip
+            if skip_until_blank:
+                if line.strip() == "":
+                    skip_until_blank = False
+                continue
+            # Check if line contains any CUDA hack pattern
+            if any(hack in line for hack in cuda_hacks):
+                changed = True
+                # Start skipping if this is a function definition we need to remove entirely
+                if "def _fake_torch_device" in line:
+                    skip_until_blank = True
+                continue
+            filtered_lines.append(line)
+        patched = "\n".join(filtered_lines)
     return patched, changed
 
 
@@ -363,6 +344,9 @@ def compose(
     out_dir.mkdir(parents=True, exist_ok=True)
     provider = get_model_provider(model_name)
 
+    # Platform
+    platform = get_platform(target_platform)
+
     # Load inputs
     problem_code = _read_text(problem_path)
     subgraphs = json.loads(_read_text(subgraphs_path))
@@ -380,7 +364,7 @@ def compose(
     for i in range(1, max_iters + 1):
         if i == 1 or last_code is None:
             prompt = _build_composition_prompt(
-                problem_code, subgraphs, kernels, target_platform=target_platform
+                problem_code, subgraphs, kernels, target_platform=platform
             )
         else:
             # Build refinement using previous error info
@@ -411,7 +395,7 @@ def compose(
                 kernels,
                 previous_code=last_code,
                 error_info={"stderr_tail": stderr_tail, "stdout_tail": stdout_tail},
-                target_platform=target_platform,
+                target_platform=platform,
             )
 
         (attempts_dir / f"attempt_{i}.prompt.txt").write_text(prompt, encoding="utf-8")
@@ -425,7 +409,7 @@ def compose(
         extracted = extract_single_python_file(raw_text)
         code = extracted.code
         # Auto-patch trivial Triton pitfalls before running
-        code, changed = _auto_patch_common_triton_issues(code, target_platform)
+        code, changed = _auto_patch_common_triton_issues(code, platform)
         (attempts_dir / f"attempt_{i}.py").write_text(code, encoding="utf-8")
         last_code = code
 
@@ -505,7 +489,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument(
         "--target-platform",
         default="cuda",
-        choices=["cuda", "xpu"],
+        choices=get_platform_choices(),
         help="Target platform (default: cuda)",
     )
     p.add_argument("--max-iters", type=int, default=5, help="Max LLM refinement rounds")
