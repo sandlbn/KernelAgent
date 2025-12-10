@@ -40,6 +40,7 @@ except Exception:  # pragma: no cover
 from Fuser.config import OrchestratorConfig, new_run_id
 from Fuser.orchestrator import Orchestrator
 from Fuser.paths import ensure_abs_regular_file, make_run_dirs, PathSafetyError
+from triton_kernel_agent.platform_config import get_platform, get_platform_choices
 
 
 @dataclass
@@ -225,7 +226,7 @@ def run_fuser_problem(
             isolated=False,
             deny_network=False,
             enable_reasoning_extras=enable_reasoning,
-            target_platform=target_platform,
+            target_platform=get_platform(target_platform),
         )
 
         run_id = new_run_id()
@@ -810,7 +811,7 @@ Select a KernelBench problem, generate fusion-ready PyTorch subgraphs, and downl
                     value=True,
                 )
                 platform_dropdown = gr.Dropdown(
-                    choices=["cuda", "xpu"],
+                    choices=get_platform_choices(),
                     label="Target Platform",
                     value="cuda",
                     info="Select GPU platform (CUDA for NVIDIA, XPU for Intel)",
@@ -902,8 +903,8 @@ Select a KernelBench problem, generate fusion-ready PyTorch subgraphs, and downl
                 run_timeout_slider,
                 reasoning_checkbox,
                 platform_dropdown,
-                api_key_input,
                 strict_compile_checkbox,
+                api_key_input,
             ],
             outputs=[
                 status_output,

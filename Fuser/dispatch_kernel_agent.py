@@ -49,6 +49,12 @@ try:
 except Exception:  # pragma: no cover - import-time dependency
     TritonKernelAgent = None  # type: ignore
 
+from triton_kernel_agent.platform_config import (
+    get_platform,
+    get_platform_choices,
+    PlatformConfig,
+)
+
 
 def _shape_list(shape: Any) -> List[str]:
     if isinstance(shape, list):
@@ -253,7 +259,7 @@ def _build_reference_code(item: Dict[str, Any]) -> Tuple[str, List[str]]:
 
 
 def _synthesize_problem_description(
-    item: Dict[str, Any], target_platform: str = "cuda"
+    item: Dict[str, Any], target_platform: PlatformConfig
 ) -> str:
     id_ = str(item.get("id", "unknown"))
     type_ = str(item.get("type", ""))
@@ -277,8 +283,8 @@ def _synthesize_problem_description(
         Type: {type_}
         Data layout: {layout}
         DType: {dtype}
-        Target Platform: {target_platform}
-        Device String: {target_platform}
+        Target Platform: {target_platform.name}
+        Device String: {target_platform.device_string}
 
         Shapes:
         - input: {_fmt_shape(inputs_multi[0]) if isinstance(inputs_multi, list) else _fmt_shape(input_shape)}
@@ -296,7 +302,7 @@ def _synthesize_problem_description(
         - kernel_function must accept input tensor(s) and any required weights/bias parameters (match shapes above).
         - Implement the exact semantics of the listed ops in the given order for the provided shapes.
         - Use {layout} layout and {dtype} dtype semantics.
-        - Use device='{target_platform}' for all tensor allocations in the wrapper function.
+        - Use device='{target_platform.device_string}' for all tensor allocations in the wrapper function.
         - The test will import kernel_function and compare to the reference implementation below.
 
         Test tolerance policy (enforced in generated tests):
@@ -343,12 +349,14 @@ def run(
 
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    platform = get_platform(target_platform)
+
     # Worker function: create a dedicated agent instance per subgraph to avoid
     # cross-thread state interactions inside the agent/manager.
     def _handle_one(idx_item: Tuple[int, Dict[str, Any]]) -> Tuple[int, Dict[str, Any]]:
         idx, item = idx_item
         sid = str(item.get("id", f"subgraph_{idx}"))
-        pdesc = _synthesize_problem_description(item, target_platform=target_platform)
+        pdesc = _synthesize_problem_description(item, target_platform=platform)
         sg_dir = out_dir / sid
         sg_dir.mkdir(parents=True, exist_ok=True)
         (sg_dir / "problem.txt").write_text(pdesc, encoding="utf-8")
@@ -358,7 +366,7 @@ def run(
             num_workers=4,
             max_rounds=10,
             model_name=agent_model,
-            target_platform=target_platform,
+            target_platform=platform,
         )
         try:
             result = local_agent.generate_kernel(
@@ -444,7 +452,7 @@ def main(argv: List[str] | None = None) -> int:
     p.add_argument(
         "--target-platform",
         default="cuda",
-        choices=["cuda", "xpu"],
+        choices=get_platform_choices(),
         help="Target platform (default: cuda)",
     )
     args = p.parse_args(argv)

@@ -16,6 +16,7 @@
 
 from pathlib import Path
 from typing import Dict, Optional
+from triton_kernel_agent.platform_config import PlatformConfig, get_platform
 
 try:
     from jinja2 import Environment, FileSystemLoader, Template
@@ -36,19 +37,25 @@ class PromptManager:
     for test generation, kernel generation, and kernel refinement.
     """
 
-    def __init__(self, templates_dir: Optional[str] = None, target_platform: str = "cuda"):
+    def __init__(
+        self,
+        templates_dir: Optional[str] = None,
+        target_platform: Optional[PlatformConfig] = None,
+    ):
         """
         Initialize the prompt manager.
 
         Args:
             templates_dir: Path to the templates directory. If None, uses default.
-            target_platform: Target platform ('cuda' or 'xpu')
+            target_platform: Target platform PlatformConfig
         """
         if not JINJA2_AVAILABLE:
             raise ImportError(
                 "Jinja2 is not available. Please install it with: pip install jinja2"
             )
 
+        if target_platform is None:
+            target_platform = get_platform("cuda")
         self.target_platform = target_platform
         # Set up templates directory
         if templates_dir:
@@ -109,7 +116,7 @@ class PromptManager:
         return template.render(
             problem_description=problem_description,
             provided_test_code=provided_test_code,
-            target_platform=self.target_platform,
+            device_string=self.target_platform.device_string,
         )
 
     def render_kernel_generation_prompt(
@@ -139,7 +146,9 @@ class PromptManager:
             problem_description=problem_description,
             test_code=test_code,
             triton_guidelines=triton_guidelines,
-            target_platform=self.target_platform,
+            target_platform=self.target_platform.name,
+            device_string=self.target_platform.device_string,
+            kernel_guidance=self.target_platform.kernel_guidance,
         )
 
     def render_kernel_refinement_prompt(
@@ -178,7 +187,7 @@ class PromptManager:
             error_info=error_info,
             history_context=history_context,
             triton_guidelines=triton_guidelines,
-            target_platform=self.target_platform,
+            kernel_guidance=self.target_platform.kernel_guidance,
         )
 
     def render_triton_guidelines(self) -> str:

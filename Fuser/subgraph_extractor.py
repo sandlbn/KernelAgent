@@ -45,6 +45,7 @@ from .config import OrchestratorConfig, new_run_id
 from .orchestrator import Orchestrator
 from .paths import ensure_abs_regular_file, make_run_dirs, PathSafetyError
 from .event_adapter import EventAdapter
+from triton_kernel_agent.platform_config import get_platform_choices
 
 
 def _load_code_from_tar(artifact_path: Path) -> str:
@@ -361,7 +362,10 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument("--llm-timeout-s", type=int, default=2400)
     p.add_argument("--run-timeout-s", type=int, default=2400)
     p.add_argument(
-        "--target-platform", default="cuda", choices=["cuda", "xpu"], help="Target platform"
+        "--target-platform",
+        default="cuda",
+        choices=get_platform_choices(),
+        help="Target platform",
     )
     args = p.parse_args(argv)
 

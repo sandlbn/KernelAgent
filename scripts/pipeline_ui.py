@@ -34,6 +34,8 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
+from triton_kernel_agent.platform_config import get_platform, get_platform_choices
+
 
 def _list_kernelbench_problems(base: Path) -> List[Tuple[str, str]]:
     """Return list of (label, absolute_path) pairs for KernelBench problems."""
@@ -228,7 +230,7 @@ def run_pipeline_ui(
                 verify=verify,
                 dispatch_jobs=(dispatch_jobs if dispatch_jobs else "1"),
                 allow_fallback=True,
-                target_platform=target_platform,
+                target_platform=get_platform(target_platform),
             )
             rr = router.solve(problem_file)
             elapsed = time.time() - start_time
@@ -329,7 +331,7 @@ def run_pipeline_ui(
             out_root=None,
             verify=verify,
             compose_max_iters=compose_max_iters,
-            target_platform=target_platform,
+            target_platform=get_platform(target_platform),
         )
         elapsed = time.time() - start_time
         run_dir = Path(res.get("run_dir", ".")).resolve()
@@ -619,11 +621,12 @@ Run the extract → dispatch → compose pipeline on KernelBench problems and do
                     label="Verify composed kernel", value=True
                 )
                 platform_dropdown = gr.Dropdown(
-                    choices=["cuda", "xpu"],
+                    choices=get_platform_choices(),
                     label="Target Platform",
                     value="cuda",
                     info="CUDA for NVIDIA GPUs, XPU for Intel GPUs",
                 )
+
                 run_button = gr.Button("🚀 Run Pipeline", variant="primary")
 
             with gr.Column(scale=1.5):
@@ -652,8 +655,8 @@ Run the extract → dispatch → compose pipeline on KernelBench problems and do
             run_timeout: int,
             compose_max_iters: int,
             verify: bool,
+            platform: str,
             api_key: Optional[str],
-            target_platform: str,
         ):
             return ui.run(
                 selected_problem_label=selected_label,
@@ -672,7 +675,7 @@ Run the extract → dispatch → compose pipeline on KernelBench problems and do
                 compose_max_iters=compose_max_iters,
                 verify=verify,
                 user_api_key=api_key,
-                target_platform=target_platform,
+                target_platform=platform,
             )
 
         run_button.click(
@@ -693,8 +696,8 @@ Run the extract → dispatch → compose pipeline on KernelBench problems and do
                 run_timeout_slider,
                 compose_iters_slider,
                 verify_checkbox,
-                api_key_input,
                 platform_dropdown,
+                api_key_input,
             ],
             outputs=[status_out, details_out, code_out, run_info_out, download_out],
             show_progress=True,

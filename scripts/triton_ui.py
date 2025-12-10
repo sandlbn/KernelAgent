@@ -27,6 +27,7 @@ from dotenv import load_dotenv
 
 
 from triton_kernel_agent import TritonKernelAgent
+from triton_kernel_agent.platform_config import get_platform, get_platform_choices
 from utils.providers.models import AVAILABLE_MODELS
 from utils.providers.openai_provider import OpenAIProvider
 from utils.providers.anthropic_provider import AnthropicProvider
@@ -102,6 +103,7 @@ class TritonKernelUI:
             model_name: OpenAI model to use
             high_reasoning_effort: Whether to use high reasoning effort
             user_api_key: Optional OpenAI API key (not saved, used only for this session)
+            target_platform: Target platform ('cuda' or 'xpu')
 
         Returns:
             - status: Success/failure message
@@ -432,12 +434,15 @@ def _create_app() -> gr.Blocks:
                     info="Use high reasoning effort for better quality (o4-mini and o3 series only)",
                     interactive=True,
                 )
+
+                # Platform dropdown
                 platform_dropdown = gr.Dropdown(
-                    choices=["cuda", "xpu"],
+                    choices=get_platform_choices(),
                     label="🎯 Target Platform",
                     value="cuda",
                     info="CUDA for NVIDIA GPUs, XPU for Intel GPUs",
                 )
+
                 gr.Markdown("## 🧩 Problem Library")
 
                 problem_dropdown = gr.Dropdown(
@@ -550,18 +555,18 @@ def _create_app() -> gr.Blocks:
             test_code,
             model_name,
             high_reasoning_effort,
+            platform,
             user_api_key,
-            target_platform,
         ):
             """Wrapper for generate_kernel with status updates"""
             try:
                 return ui.generate_kernel(
-                    problem_desc,
-                    test_code,
-                    model_name,
-                    high_reasoning_effort,
-                    user_api_key,
-                    target_platform,
+                    problem_description=problem_desc,
+                    test_code=test_code,
+                    model_name=model_name,
+                    high_reasoning_effort=high_reasoning_effort,
+                    user_api_key=user_api_key,
+                    target_platform=platform,
                 )
             except Exception as e:
                 error_msg = f"❌ **UI ERROR**: {str(e)}\n\n**Traceback:**\n{traceback.format_exc()}"
@@ -594,7 +599,7 @@ def _create_app() -> gr.Blocks:
                     label="🔑 API Key (Not required for Relay)",
                     placeholder="Relay provider uses local server; no key required.",
                     info=(
-                        "Relay models use a local relay server. Ensure it’s running; no API key needed."
+                        "Relay models use a local relay server. Ensure it's running; no API key needed."
                     ),
                 )
 
@@ -627,8 +632,8 @@ def _create_app() -> gr.Blocks:
                 test_input,
                 model_dropdown,
                 high_reasoning_effort_checkbox,
-                api_key_input,
                 platform_dropdown,
+                api_key_input,
             ],
             outputs=[
                 status_output,

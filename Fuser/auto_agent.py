@@ -57,6 +57,11 @@ from Fuser.pipeline import run_pipeline
 
 # Local imports (available inside repo)
 from triton_kernel_agent import TritonKernelAgent
+from triton_kernel_agent.platform_config import (
+    get_platform_choices,
+    get_platform,
+    PlatformConfig,
+)
 from utils.providers.models import get_model_provider
 
 
@@ -325,7 +330,7 @@ class AutoKernelRouter:
         verify: bool = True,
         dispatch_jobs: int = 2,
         allow_fallback: bool = True,
-        target_platform: str = "cuda",
+        target_platform: Optional[PlatformConfig] = None,
     ) -> None:
         self.ka_model = ka_model
         self.ka_num_workers = ka_num_workers
@@ -347,6 +352,8 @@ class AutoKernelRouter:
         self.verify = verify
         self.dispatch_jobs = dispatch_jobs
         self.allow_fallback = allow_fallback
+        if target_platform is None:
+            target_platform = get_platform("cuda")
         self.target_platform = target_platform
 
     def _solve_with_kernelagent(self, problem_code: str) -> RouteResult:
@@ -703,7 +710,7 @@ def main(argv: Optional[list[str]] = None) -> int:
     p.add_argument(
         "--target-platform",
         default="cuda",
-        choices=["cuda", "xpu"],
+        choices=get_platform_choices(),
         help="Target platform (default: cuda)",
     )
     args = p.parse_args(argv)
