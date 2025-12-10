@@ -52,7 +52,6 @@ from dotenv import load_dotenv
 from triton_kernel_agent.platform_config import (
     get_platform,
     get_platform_choices,
-    DEFAULT_PLATFORM,
     PlatformConfig,
 )
 
@@ -304,26 +303,26 @@ def _auto_patch_common_triton_issues(
             patched = patched.replace(old, new)
             changed = True
     # Remove cuda paterns
-    if target_platform.cuda_hacks_to_strip:
-        for hack in target_platform.cuda_hacks_to_strip:
-            if hack in patched:
-                # Remove lines containing these patterns
-                lines = patched.split("\n")
-                filtered_lines = []
-                skip_until_blank = False
-                for line in lines:
-                    if any(h in line for h in target_platform.cuda_hacks_to_strip):
-                        changed = True
-                        if "def _fake_torch_device" in line:
-                            skip_until_blank = True
-                        continue
-                    if skip_until_blank:
-                        if line.strip() == "":
-                            skip_until_blank = False
-                        continue
-                    filtered_lines.append(line)
-                    patched = "\n".join(filtered_lines)
-
+    cuda_hacks = target_platform.cuda_hacks_to_strip
+    if cuda_hacks:
+        lines = patched.split("\n")
+        filtered_lines = []
+        skip_until_blank = False
+        for line in lines:
+            # Check if we're in a block to skip
+            if skip_until_blank:
+                if line.strip() == "":
+                    skip_until_blank = False
+                continue
+            # Check if line contains any CUDA hack pattern
+            if any(hack in line for hack in cuda_hacks):
+                changed = True
+                # Start skipping if this is a function definition we need to remove entirely
+                if "def _fake_torch_device" in line:
+                    skip_until_blank = True
+                continue
+            filtered_lines.append(line)
+        patched = "\n".join(filtered_lines)
     return patched, changed
 
 

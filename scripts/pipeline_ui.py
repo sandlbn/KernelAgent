@@ -28,13 +28,12 @@ from typing import List, Optional, Tuple
 
 import gradio as gr
 from dotenv import load_dotenv
+from triton_kernel_agent.platform_config import get_platform, get_platform_choices
 
 # Ensure project root is importable when run as a script.
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
-
-from triton_kernel_agent.platform_config import get_platform, get_platform_choices
 
 
 def _list_kernelbench_problems(base: Path) -> List[Tuple[str, str]]:

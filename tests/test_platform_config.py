@@ -179,7 +179,9 @@ class TestXpuPlatformConfig:
         """XPU should have kernel-specific guidance."""
         config = get_platform("xpu")
         assert config.kernel_guidance != ""
-        assert "Intel" in config.kernel_guidance or "xpu" in config.kernel_guidance.lower()
+        assert (
+            "Intel" in config.kernel_guidance or "xpu" in config.kernel_guidance.lower()
+        )
 
     def test_xpu_has_cuda_hacks_to_strip(self):
         """XPU should have CUDA hacks to strip from generated code."""
