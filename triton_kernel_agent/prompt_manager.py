@@ -146,8 +146,6 @@ class PromptManager:
             problem_description=problem_description,
             test_code=test_code,
             triton_guidelines=triton_guidelines,
-            target_platform=self.target_platform.name,
-            device_string=self.target_platform.device_string,
             kernel_guidance=self.target_platform.kernel_guidance,
         )
 
