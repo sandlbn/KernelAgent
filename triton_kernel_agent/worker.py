@@ -152,7 +152,7 @@ class VerificationWorker:
         self.openai_model = openai_model
         self.high_reasoning_effort = high_reasoning_effort
         self.target_platform = target_platform
-        self._platform_config: Optional[PlatformConfig] = None
+        self._platform_config = get_platform(target_platform)
 
         # Setup files
         self.kernel_file = self.workdir / "kernel.py"
@@ -165,7 +165,7 @@ class VerificationWorker:
         self._setup_logging()
 
         # Initialize prompt manager with resolved config
-        self.prompt_manager = PromptManager(target_platform=self.platform_config)
+        self.prompt_manager = PromptManager(target_platform=self._platform_config)
 
         # Initialize provider (may be unavailable in offline/test environments)
         self.provider = None
@@ -174,15 +174,6 @@ class VerificationWorker:
         except ValueError as e:
             # Provider not available, will use mock mode
             self.logger.warning(f"Provider not available: {e}")
-
-        # Initialize prompt manager
-        self.prompt_manager = PromptManager(target_platform=target_platform)
-
-    @property
-    def platform_config(self) -> PlatformConfig:
-        if self._platform_config is None:
-            self._platform_config = get_platform(self.target_platform)
-        return self._platform_config
 
     def _setup_logging(self):
         """Setup worker-specific logging."""

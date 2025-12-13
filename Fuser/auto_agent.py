@@ -353,14 +353,7 @@ class AutoKernelRouter:
         self.dispatch_jobs = dispatch_jobs
         self.allow_fallback = allow_fallback
         self.target_platform = target_platform  # Store str
-        self._platform_config: Optional[PlatformConfig] = None
-
-    @property
-    def platform_config(self) -> PlatformConfig:
-        """Lazy-resolve to PlatformConfig."""
-        if self._platform_config is None:
-            self._platform_config = get_platform(self.target_platform)
-        return self._platform_config
+        self.platform_config = get_platform(target_platform)
 
     def _solve_with_kernelagent(self, problem_code: str) -> RouteResult:
         agent = TritonKernelAgent(

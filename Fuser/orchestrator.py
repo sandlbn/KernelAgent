@@ -103,13 +103,6 @@ class Orchestrator:
         self._stop_console = threading.Event()
         self._stream_mode = cfg.stream_mode
         self.target_platform = cfg.target_platform
-        self._platform_config = None
-
-        @property
-        def platform_config(self) -> PlatformConfig:
-            if self._platform_config is None:
-                self._platform_config = get_platform(self.target_platform)
-            return self._platform_config
 
     def _make_worker_cfg(self, idx: int) -> WorkerConfig:
         worker_id = f"worker_{idx + 1:02d}"
