@@ -17,6 +17,7 @@
 import json
 import logging
 import multiprocessing as mp
+import os
 import re
 import subprocess
 import sys
@@ -26,8 +27,10 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 from .prompt_manager import PromptManager
+from .worker_util import _run_test_multiprocess
 from utils.providers import get_model_provider
 from triton_kernel_agent.platform_config import PlatformConfig, get_platform
+
 
 DISALLOWED_TORCH_PATTERNS = [
     (
@@ -287,9 +290,14 @@ class VerificationWorker:
             )
 
             success = result.returncode == 0
-            self.logger.info(
-                f"Test {'passed' if success else 'failed'} with code {result.returncode}"
-            )
+            if success:
+                self.logger.info("Test passed")
+            else:
+                self.logger.error(
+                    "Test failed. Exit code: %s, stderr: %s",
+                    result.returncode,
+                    result.stderr[:500],
+                )
 
             return success, result.stdout, result.stderr
 
@@ -470,7 +478,11 @@ class VerificationWorker:
                 continue
 
             # Run test
-            success, stdout, stderr = self._run_test()
+            success, stdout, stderr = (
+                self._run_test()
+                if os.getenv("KA_PROCESS_USE_SYS_EXECUTABLE", "1") == "1"
+                else _run_test_multiprocess(self.logger, self.workdir, self.test_file)
+            )
 
             # Log round
             self._log_round(round_num + 1, success, current_kernel, stdout, stderr)
