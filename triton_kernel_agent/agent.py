@@ -62,9 +62,6 @@ class TritonKernelAgent:
             "OPENAI_MODEL", "claude-sonnet-4-20250514"
         )
         self.high_reasoning_effort = high_reasoning_effort
-        if target_platform is None:
-            target_platform = get_platform("cuda")
-        self.target_platform = target_platform
 
         # Initialize provider
         self.provider = None
@@ -92,7 +89,6 @@ class TritonKernelAgent:
             self._platform_config = get_platform(target_platform)
         else:
             self._platform_config = target_platform
-        self.target_platform = self._platform_config
 
         # Setup main logger
         self._setup_logging()
