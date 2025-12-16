@@ -154,7 +154,6 @@ class VerificationWorker:
         self.history_size = history_size
         self.openai_model = openai_model
         self.high_reasoning_effort = high_reasoning_effort
-        self.target_platform = target_platform
         self._platform_config = get_platform(target_platform)
 
         # Setup files
