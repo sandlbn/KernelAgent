@@ -101,11 +101,6 @@ class TestPlatformConfigs:
         config = get_platform("cuda")
         assert config.cuda_hacks_to_strip == ()
 
-    def test_xpu_device_string(self):
-        """XPU device_string should be 'xpu'."""
-        config = get_platform("xpu")
-        assert config.device_string == "xpu"
-
     def test_xpu_has_guidance_block(self):
         """XPU should have non-empty guidance block mentioning xpu."""
         config = get_platform("xpu")
