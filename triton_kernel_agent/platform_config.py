@@ -43,7 +43,7 @@ class PlatformConfig:
 # Platform-specific constants
 _XPU_GUIDANCE = """\
 **CRITICAL PLATFORM REQUIREMENTS FOR INTEL XPU:**
-- Use device='xpu' for ALL tensor allocations (never 'cuda')
+- Default tensor allocations to device='xpu' (never 'cuda'); CPU is allowed only when necessary.
 - Check availability with: hasattr(torch, 'xpu') and torch.xpu.is_available()
 - Do NOT monkey-patch torch.cuda or torch.device
 - Do NOT set TRITON_BACKENDS environment variable
